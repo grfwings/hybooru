@@ -1,7 +1,7 @@
 {
 	"port": 3939,
 	"host": null,
-	"hydrusDbPath": null,
+	"hydrusDbPath": "/opt/hydrus/db",
 	"appName": "Hybooru",
 	"appDescription": "Hydrus-based booru-styled imageboard in React",
 	"adminPassword": null,
@@ -9,13 +9,13 @@
 	"importBatchSize": 8192,
 	"db": {
 		"user": "hybooru",
-		"host": "localhost",
+		"host": "hybooru-pg",
 		"database": "hybooru",
 		"password": "hybooru",
 		"port": 5432
 	},
 	"posts": {
-		"services": null,
+		"services": ["my files"],
 		"filesPathOverride": null,
 		"thumbnailsPathOverride": null,
 		"thumbnailsMode": "fit",
@@ -29,8 +29,8 @@
 		"motd": null,
 		"untagged": "-*",
 		"ignore": [],
-		"blacklist": null,
-		"whitelist": null,
+		"blacklist": ["system:trash"],
+		"whitelist": ["rating:general, rating:sensitive"],
 		"resolveRelations": true,
 		"reportLoops": false,
 		"searchSummary": 39
