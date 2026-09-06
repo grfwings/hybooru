@@ -1,6 +1,7 @@
 
 ### TODO:
 
+- fix very long tags fetch on last pages with a lot of tags
 - DMCA page
 - IPFS integration
 - Fix `Error: Request aborted`
@@ -14,6 +15,68 @@
 
 
 # Unreleased
+
+
+# v1.15.3
+
+- Added noIndex to search results, `/random` and `/diagnostics`
+- Added nofollow to tag related links
+- Added canonical URLs to most pages
+- Added soft 404 for SSR pages with empty search results
+- Updated robots.txt to include new pages and allow crawling over unfiltered search results
+
+
+# v1.15.2
+
+- Fixed import error when using multiple file services (#60)
+
+
+# v1.15.1
+
+- Fixed footer not being centered on index page
+- Fixed client-side post cache not being clear after database rebuild
+- Fixed pagination being enabled by default on first visit
+
+
+# v1.15.0
+
+- Added Tag-based sort presets
+- Added diagnostics and profiling page `/diagnostics`
+- Added maintenance page with realtime progress that appears while db is busy (eg importing, benchmarking)
+- Added dedicated error page
+- Improved performance of tags page and API endpoints.
+- Improved performance of negative searches.
+- Fixed errors if there are no namespaces defined
+- Fixed `'nunFrames'` misspell in `GET /api/post/:id`
+- Fixed non-uniform naming. The project is now called `Hybooru`(without capital B) everywhere
+- Fixed automatic redirects to page 1 when linking to other pages
+- Fixed search results disappearing when switching to Auto Paging while on page greater than 1
+- Fixed rating stars ignoring config
+
+
+# v1.14.1
+
+- Fixed errors on importing from read-only filesystem
+- Bump required NodeJS version to 20
+
+
+# v1.14.0
+
+- Added support for JPEG XL/.JXL (#58)
+
+
+# v1.13.0
+
+- Added DB_* config override env variables (#53)
+- Fixed filtered Random Post being limited to the first cache page (#55)
+- Fixed github version check getting stuck on request error
+- Removed error messages on ECONNABORTED connections (#56)
+
+
+# v1.12.4
+
+- Fixed github api being spammed on long imports
+- Fixed importer failing when a post has multiple identical notes
 
 
 # v1.12.3

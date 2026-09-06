@@ -14,7 +14,7 @@ import GalleryPopup from "./GalleryPopup";
 import "./SearchPage.scss";
 
 export default function SearchPage() {
-  const { postsCache, fetching, requestNext, reset } = usePostsCache();
+  const { postsCache, fetching, requestNext, reset, error, resetError } = usePostsCache();
   const [pagination] = useLocalStorage("pagination", false);
   const [popupEnabled] = useLocalStorage("popup", false);
   const SSR = useSSR();
@@ -92,6 +92,11 @@ export default function SearchPage() {
     setPopup(id);
   }, [popupEnabled, setPopup]);
   
+  const onTryAgain = useCallback((ev: React.MouseEvent) => {
+    ev.preventDefault();
+    resetError();
+  }, [resetError]);
+  
   useEffect(() => checkScroll(), [checkScroll, postsCache]);
   useEffect(() => {
     checkScroll();
@@ -105,15 +110,23 @@ export default function SearchPage() {
   
   useEffect(() => {
     if(!pagination && search.page !== undefined) {
-      history.replace(qsStringify({ ...search, page: undefined }));
+      history.replace(history.location.pathname + qsStringify({ ...search, page: undefined }));
     } else if(pagination && postsCache.page > 1) {
       reset();
     }
-  }, [history, pagination, postsCache.page, reset, search]);
+  }, [SSR, history, pagination, postsCache.page, reset, search]);
   
   let footer = <div className={`bottomPad${end ? " end" : ""}`} />;
   if(usePagination) footer = <Pagination count={pageCount} />;
   else if(fetching) footer = <Spinner />;
+  else if(error) {
+    footer = (
+      <div className="errorMessage">
+        <span>There was an error while fetching next page</span>
+        <a href="#" onClick={onTryAgain}>Try Again</a>
+      </div>
+    );
+  }
   
   return (
     <Layout className="SearchPage" dimmed={popup !== null}

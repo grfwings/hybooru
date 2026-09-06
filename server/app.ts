@@ -4,10 +4,10 @@ import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import morgan from 'morgan';
+import { qsStringify } from "../client/helpers/utils";
 import reactMiddleware from "./middlewares/reactMiddleware";
-import configMiddleware from "./middlewares/configMiddleware";
 import HTTPError from "./helpers/HTTPError";
-import { ErrorPageData } from "./routes/apiTypes";
+import { ErrorResponse } from "./routes/apiTypes";
 import { router } from "./routes";
 import "./helpers/db";
 
@@ -28,7 +28,6 @@ if(process.env.NODE_ENV === 'development') {
   app.use('/style.css', express.static('style.css'));
 }
 
-app.use(configMiddleware);
 app.use(reactMiddleware);
 
 app.use('/', router);
@@ -38,16 +37,21 @@ app.use((req, res, next) => {
 });
 
 app.use((err: Partial<HTTPError>, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if((err as any).code === 'ECONNABORTED') return;
   if((err as any).code === 'EBADCSRFTOKEN') err = new HTTPError(403, "Bad CSRF Token");
   if(err.HTTPcode !== 404) console.error(err);
+  if(res.headersSent) return;
   
   const code = err.HTTPcode || 500;
-  const error = {
+  const headers = err.headers || {};
+  const error: ErrorResponse = {
     code,
     message: err.publicMessage || http.STATUS_CODES[code] || "Something Happened",
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
   };
-  res.status(code).react<ErrorPageData>({ _error: error });
+  const htmlRedirect = headers["X-Hybooru-DbLock"] === "true" ? `/lock${qsStringify({ redirect: req.originalUrl })}` : undefined;
+  
+  res.status(code).header(headers).react({ _error: error }, { htmlRedirect });
 });
 
 export default app;

@@ -4,6 +4,7 @@ import pg from "pg";
 import { Theme } from "../../client/hooks/useTheme";
 import chalk from "chalk";
 import { ThumbnailsMode } from "../routes/apiTypes";
+import * as jp from "./jsonpatch";
 
 interface Configs {
   port: number,
@@ -41,6 +42,7 @@ interface Configs {
     resolveRelations: boolean,
     reportLoops: boolean,
     searchSummary: number,
+    sortPresets: Record<string, string[]> | null,
   },
   rating: {
     enabled: boolean,
@@ -61,7 +63,7 @@ let configs: Configs = {
   port: 3939,
   host: null,
   hydrusDbPath: null,
-  appName: "HyBooru",
+  appName: "Hybooru",
   appDescription: "Hydrus-based booru-styled imageboard in React",
   adminPassword: null,
   isTTY: null,
@@ -93,6 +95,9 @@ let configs: Configs = {
     resolveRelations: true,
     reportLoops: false,
     searchSummary: 39,
+    sortPresets: {
+      page: ["creator", "series", "title", "volume", "chapter", "page"]
+    },
   },
   rating: {
     enabled: true,
@@ -126,23 +131,27 @@ function deepMerge<T extends Object>(base: T, object: T): T {
   return ret;
 }
 
-const movedOptions = ["pageSize", "cachePages", "cacheRecords", "filesPathOverride", "thumbnailsPathOverride", "maxPreviewSize"] as const;
+const movedOptions = {
+  "rating.serviceName": "rating.service",
+  "pageSize": "posts.pageSize",
+  "filesPathOverride": "posts.filesPathOverride",
+  "thumbnailsPathOverride": "posts.thumbnailsPathOverride",
+  "cachePages": "posts.cachePages",
+  "cacheRecords": "posts.cacheRecords",
+  "maxPreviewSize": "posts.maxPreviewSize",
+};
 
 try {
   // noinspection UnnecessaryLocalVariableJS
   const configsJson: typeof import("../../configs.json") = JSON.parse(fs.readFileSync("./configs.json").toString("utf-8"));
-  configs = deepMerge(configs, configsJson);
+  configs = deepMerge(configs, configsJson as any);
   
-  for(const movedOption of movedOptions) {
-    if(configs[movedOption] !== undefined) {
-      console.error(`${chalk.bold.yellow("Warning!")} Config option ${movedOption} is deprecated and will be removed in future releases, use posts.${movedOption} instead!`);
-      (configs.posts as any)[movedOption] ??= configs[movedOption];
+  for(const [from, to] of Object.entries(movedOptions)) {
+    const value = jp.query(configs, from);
+    if(value) {
+      console.error(`${chalk.bold.yellow("Warning!")} Config option ${from} is deprecated and will be removed in future releases, use ${to} instead!`);
+      if(jp.query(configs, to) === undefined) configs = jp.patch(configs, to, value);
     }
-  }
-  
-  if(configs.rating?.serviceName !== undefined) {
-    console.error(`${chalk.bold.yellow("Warning!")} Config option rating.serviceName is deprecated and will be removed in future releases, use rating.service instead!`);
-    configs.rating.service ??= configs.rating.serviceName;
   }
 } catch(e) {
   console.error("Failed to read configs.json");
@@ -154,10 +163,30 @@ try {
 if(process.env.HYDRUS_ADMIN_PASSWORD) {
   configs.adminPassword = process.env.HYDRUS_ADMIN_PASSWORD;
 }
+if(process.env.DB_HOST) {
+  configs.db.host = process.env.DB_HOST;
+}
+if(process.env.DB_PORT) {
+  const port = parseInt(process.env.DB_PORT, 10);
+  if(isNaN(port)) {
+    console.error(`${chalk.bold.yellow("Warning!")} DB_PORT environment variable is not a valid number: ${JSON.stringify(process.env.DB_PORT)}, ignoring.`);
+  } else {
+    configs.db.port = port;
+  }
+}
+if(process.env.DB_USER) {
+  configs.db.user = process.env.DB_USER;
+}
+if(process.env.DB_PASSWORD) {
+  configs.db.password = process.env.DB_PASSWORD;
+}
+if(process.env.DB_NAME) {
+  configs.db.database = process.env.DB_NAME;
+}
 
 if(configs.posts.thumbnailsMode !== ThumbnailsMode.FIT && configs.posts.thumbnailsMode !== ThumbnailsMode.FILL) {
-  console.error(`${chalk.bold.yellow("Warning!")} Config option posts.thumbnailsMode should be "fit" or "fill", got ${JSON.stringify(configs.posts.thumbnailsMode)}!`);
-  configs.posts.thumbnailsMode = "fit";
+  console.error(`${chalk.bold.yellow("Warning!")} Config option posts.thumbnailsMode should be either "${ThumbnailsMode.FIT}" or "${ThumbnailsMode.FILL}", got ${JSON.stringify(configs.posts.thumbnailsMode)}!`);
+  configs.posts.thumbnailsMode = ThumbnailsMode.FIT;
 }
 
 export default configs;

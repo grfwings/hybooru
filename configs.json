@@ -33,7 +33,10 @@
 		"whitelist": null,
 		"resolveRelations": true,
 		"reportLoops": false,
-		"searchSummary": 39
+		"searchSummary": 39,
+		"sortPresets": {
+			"page": ["creator", "series", "title", "volume", "chapter", "page"]
+		}
 	},
 	"rating": {
 		"enabled": false,

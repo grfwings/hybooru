@@ -11,15 +11,13 @@ import "./TagsPage.scss";
 
 export default function TagsPage() {
   const [showNamespaces] = useLocalStorage("namespaces", false);
-  let [pageData] = usePageData<TagsSearchPageData>();
+  let { pageData } = usePageData<TagsSearchPageData>();
   const pageDataCache = useRef(pageData);
   
   if(pageData) pageDataCache.current = pageData;
   else pageData = pageDataCache.current;
   
   const pageCount = pageData && Math.ceil(pageData.results.total / pageData.results.pageSize);
-  
-  console.log(pageData);
   
   return (
     <Layout className="TagsPage" searchAction="/tags" random={false} simpleSettings>
@@ -55,8 +53,8 @@ function Row({ tag, showNamespaces }: RowProps) {
       <td>{tag.posts}</td>
       <td><TagLink tag={tag.name} showNamespaces={showNamespaces} /></td>
       <td>{namespaceMatch ? namespaceMatch[1] : "General"}</td>
-      <td>{tag.parents.map((parent, id) => <>{id !== 0 && ", "}<TagLink key={parent} tag={parent} showNamespaces={showNamespaces} /></>)}</td>
-      <td>{tag.siblings.map((sibling, id) => <>{id !== 0 && ", "}<TagLink key={sibling} tag={sibling} showNamespaces={showNamespaces} /></>)}</td>
+      <td>{tag.parents.map((parent, id) => <React.Fragment key={parent}>{id !== 0 && ", "}<TagLink tag={parent} showNamespaces={showNamespaces} /></React.Fragment>)}</td>
+      <td>{tag.siblings.map((sibling, id) => <React.Fragment key={sibling}>{id !== 0 && ", "}<TagLink tag={sibling} showNamespaces={showNamespaces} /></React.Fragment>)}</td>
     </tr>
   );
 }
@@ -67,7 +65,7 @@ interface TagLinkProps {
 }
 
 function TagLink({ tag, showNamespaces }: TagLinkProps) {
-  const config = useConfig();
+  const [config] = useConfig();
   
   let name = tag.replace(/_/g, " ");
   let color: string | undefined;
@@ -78,5 +76,5 @@ function TagLink({ tag, showNamespaces }: TagLinkProps) {
     color = config.namespaceColors[result[1]];
   }
   
-  return <Link to={`/posts?query=${encodeURIComponent(tag)}`} style={{ color }}>{name}</Link>;
+  return <Link to={`/posts?query=${encodeURIComponent(tag)}`} rel="nofollow" style={{ color }}>{name}</Link>;
 }

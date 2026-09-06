@@ -116,6 +116,10 @@
       {
         "selector": ["enumMember"],
         "format": ["UPPER_CASE"]
+      },
+      {
+        "selector": ["import"],
+        "format": null
       }
     ],
     "@typescript-eslint/no-array-constructor": "warn",
@@ -155,7 +159,7 @@
       {
         "after": true,
         "before": false,
-        "method": "neither"
+        "method": "before"
       }
     ],
     "import/namespace": "error",

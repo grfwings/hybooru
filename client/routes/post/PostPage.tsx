@@ -8,7 +8,7 @@ import useConfig from "../../hooks/useConfig";
 import Layout from "../../components/Layout";
 import Thumbnail from "../../components/Thumbnail";
 import Tags from "../../components/Tags";
-import NotFoundPage from "../error/NotFoundPage";
+import ErrorPage from "../error/ErrorPage";
 import File from "./File";
 import SourceLink from "./SourceLink";
 import "./PostPage.scss";
@@ -20,8 +20,8 @@ const RELATION_STRING: Record<Relation, string> = {
 };
 
 export default function PostPage() {
-  const { ratingStars } = useConfig();
-  const [pageData] = usePageData<PostPageData>();
+  const [{ ratingStars }] = useConfig();
+  const { pageData } = usePageData<PostPageData>();
   const [fullHeight] = useLocalStorage("fullHeight", false);
   
   const sortedRelations = useMemo(() => {
@@ -31,12 +31,8 @@ export default function PostPage() {
   
   if(!pageData) {
     return (
-      <Layout className="PostPage" />
+      <Layout className="PostPage" simpleSettings />
     );
-  }
-  
-  if(!pageData.post) {
-    return <NotFoundPage />;
   }
   
   const link = fileUrl(pageData.post);
@@ -73,7 +69,7 @@ export default function PostPage() {
                 <div>{pageData.post.width !== null && pageData.post.height !== null && `Dimensions: ${pageData.post.width}x${pageData.post.height}`}</div>
                 <div>{pageData.post.mime !== null && MIME_STRING[pageData.post.mime] && `Mime: ${MIME_STRING[pageData.post.mime]}`}</div>
                 <div>{pageData.post.duration !== null && `Duration: ${parseDuration(pageData.post.duration)}`}</div>
-                <div>{pageData.post.nunFrames !== null && `Frames: ${pageData.post.nunFrames}`}</div>
+                <div>{pageData.post.numFrames !== null && `Frames: ${pageData.post.numFrames}`}</div>
                 <div>{pageData.post.hasAudio !== null && `Audio: ${pageData.post.hasAudio ? "Yes" : "No"}`}</div>
                 <div>Posted: {new Date(pageData.post.posted).toLocaleString()}</div>
                 {pageData.post.inbox && <div>In inbox</div>}
@@ -81,7 +77,7 @@ export default function PostPage() {
                 <div><b><a href={link} target="_blank" rel="noreferrer" download>Download This File</a></b></div>
               </div>
               {pageData.post.sources.length > 0 &&
-               <div className="namespace">
+                <div className="namespace">
                   <b>Sources</b>
                   {pageData.post.sources.map(url => <SourceLink key={url} url={url} />)}
                 </div>
